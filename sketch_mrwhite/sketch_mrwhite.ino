@@ -1,15 +1,11 @@
 /*
-Add this to Settings > Additional boards manager urls:
-
-  https://dl.espressif.com/dl/package_esp32_index.json
-
-Install the following boards from boards manager:
-
-  esp32
-
-Install the following libraries from library manager:
-
-  ESP32Servo
+  1. Set sketchbook location to ~/opc-japan/robotics/sketch_mrwhite
+  2. Add this to Settings > Additional boards manager urls:
+    https://dl.espressif.com/dl/package_esp32_index.json
+  3. Install the following boards from boards manager:
+    esp32
+  4. Install the following libraries from library manager:
+    ESP32Servo
 */
 
 #include <WiFi.h>

@@ -1,3 +1,17 @@
+/*
+Add this to Settings > Additional boards manager urls:
+
+  https://dl.espressif.com/dl/package_esp32_index.json
+
+Install the following boards from boards manager:
+
+  esp32
+
+Install the following libraries from library manager:
+
+  ESP32Servo
+*/
+
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>

@@ -2,19 +2,56 @@
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
+
+const char* ssid = "MESH-WIFI-kkJHnF";
+const char* password = "RcfnfgEnDpDXNu";
 
 enum Direction {
   Left,
   Right,
   Forward,
   Stop
-}
+};
+
+class LeftMotor {
+public:
+  void init() {
+    servo.attach(13);
+  }
+
+  void setSpeed(int speed) {
+    servo.write(90 + speed * 180 / 200);
+  }
+
+private:
+  Servo servo;
+
+  int convert(int speed) {
+    return 90 + speed * 180 / 200;
+  }
+};
+
+class RightMotor {
+public:
+  void init() {
+    servo.attach(12);
+  }
+
+  void setSpeed(int speed) {
+    servo.write(90 - speed * 180 / 200);
+  }
+
+private:
+  Servo servo;
+
+  int convert(int speed) {
+    return 90 - speed * 180 / 200;
+  }
+};
 
 class Sonar {
-  int echoPin;
-  int triggerPin;
-
+public:
   Sonar(int e, int t) {
     echoPin = e;
     triggerPin = t;
@@ -38,23 +75,21 @@ class Sonar {
     if (duration > 0) {
       duration = duration / 2;                    //往復距離を半分にする
       distance = duration * 340 * 100 / 1000000;  // 音速を340m/sに設定
-      Serial.print("distance:");
-      Serial.print(distance);
-      Serial.println(" cm");
     }
 
     return distance;
   }
-}
 
-Servo leftMotor;   //Servoオブジェクトを作成
-Servo rightMotor;  //Servoオブジェクトを作成
-Sonar frontSensor = Sonar(4, 16);
-Sonar leftSensor = Sonar(27, 26);
-Sonar rightSensor = Sonar(33, 25);
+private:
+  int echoPin;
+  int triggerPin;
+};
 
-const char* ssid = "MESH-WIFI-kkJHnF";
-const char* password = "RcfnfgEnDpDXNu";
+LeftMotor leftMotor;
+RightMotor rightMotor;
+Sonar frontSensor = Sonar(26, 27);
+Sonar leftSensor = Sonar(25, 33);
+Sonar rightSensor = Sonar(4, 16);
 
 void initOTA() {
   Serial.begin(9600);
@@ -113,27 +148,40 @@ void initOTA() {
   Serial.println(WiFi.localIP());
 }
 
-void initMotors() {
-  leftMotor.attach(13);   //13番ピンにサーボ制御線（オレンジ）を接続
-  rightMotor.attach(12);  //13番ピンにサーボ制御線（オレンジ）を接続
-}
+void setup() {
+  initOTA();
 
-void initSensors() {
+  leftMotor.init();
+  rightMotor.init();
+
   frontSensor.init();
   leftSensor.init();
   rightSensor.init();
 }
 
-void setup() {
-  initMotors();
-
-  initSensors();
-
-  initOTA();
+void navigate(Direction direction) {
+  switch (direction) {
+    case Forward:
+      leftMotor.setSpeed(100);
+      rightMotor.setSpeed(100);
+      break;
+    case Left:
+      leftMotor.setSpeed(50);
+      rightMotor.setSpeed(100);
+      break;
+    case Right:
+      leftMotor.setSpeed(100);
+      rightMotor.setSpeed(50);
+      break;
+    case Stop:
+      leftMotor.setSpeed(0);
+      rightMotor.setSpeed(0);
+      break;
+  }
 }
 
 Direction getDirection(double ld, double rd, double fd) {
-  if (fd < 6 && ld < 6 && fd < 6) {
+  if (fd < 4 && ld < 4 && fd < 4) {
     return Stop;
   }
 
@@ -152,20 +200,20 @@ Direction getDirection(double ld, double rd, double fd) {
   }
 }
 
-void navigate(Direction direction) {
-  switch (direction) {
+void printDirection(Direction direction) {
+  switch(direction) {
     case Forward:
-      leftMotor.write(180);
-      rightMotor.write(0);
+      Serial.println("Direction: Forward");
+      break;
     case Left:
-      leftMotor.write(180);
-      rightMotor.write(0);
+      Serial.println("Direction: Left");
+      break;
     case Right:
-      leftMotor.write(180);
-      rightMotor.write(0);
+      Serial.println("Direction: Right");
+      break;
     case Stop:
-      leftMotor.write(90);
-      rightMotor.write(90);
+      Serial.println("Direction: Stop");
+      break;
   }
 }
 
@@ -176,9 +224,12 @@ void loop() {
   double rightDistance = rightSensor.getDistance();
   double frontDistance = frontSensor.getDistance();
 
-  Direction direction = getDirection(leftDistance, rightDistance, frontDistance);
+  Serial.printf("Left: %lf Front: %lf Right: %lf\n", leftDistance, frontDistance, rightDistance);
 
-  navigate(direction);
+  Direction direction = getDirection(leftDistance, rightDistance, frontDistance);
+  printDirection(direction);
+
+  // navigate(direction);
 
   delay(50);
 }

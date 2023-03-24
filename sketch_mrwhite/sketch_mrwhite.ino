@@ -14,8 +14,8 @@
 #include <ArduinoOTA.h>
 #include <ESP32Servo.h>
 
-const char* ssid = "MESH-WIFI-kkJHnF";
-const char* password = "RcfnfgEnDpDXNu";
+const char* ssid = "Okazaki_Hope_Chapel";
+const char* password = "0001234567890";
 
 enum Direction {
   Left,
@@ -36,10 +36,6 @@ public:
 
 private:
   Servo servo;
-
-  int convert(int speed) {
-    return 90 + speed * 180 / 200;
-  }
 };
 
 class RightMotor {
@@ -54,10 +50,6 @@ public:
 
 private:
   Servo servo;
-
-  int convert(int speed) {
-    return 90 - speed * 180 / 200;
-  }
 };
 
 class Sonar {
@@ -112,19 +104,6 @@ void initOTA() {
     ESP.restart();
   }
 
-  // Port defaults to 3232
-  // ArduinoOTA.setPort(3232);
-
-  // Hostname defaults to esp3232-[MAC]
-  // ArduinoOTA.setHostname("myesp32");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
-
-  // Password can be set with it's md5 value as well
-  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-
   ArduinoOTA
     .onStart([]() {
       String type;
@@ -170,24 +149,32 @@ void setup() {
 }
 
 void navigate(Direction direction) {
+  int leftSpeed = 0;
+  int rightSpeed = 0;
+
   switch (direction) {
     case Forward:
-      leftMotor.setSpeed(100);
-      rightMotor.setSpeed(100);
+      leftSpeed = 100;
+      rightSpeed = 30;
       break;
     case Left:
-      leftMotor.setSpeed(50);
-      rightMotor.setSpeed(100);
+      leftSpeed = -30;
+      rightSpeed = 50;
       break;
     case Right:
-      leftMotor.setSpeed(100);
-      rightMotor.setSpeed(50);
+      leftSpeed = 50;
+      rightSpeed = -30;
       break;
     case Stop:
-      leftMotor.setSpeed(0);
-      rightMotor.setSpeed(0);
+      leftSpeed = 0;
+      rightSpeed = 0;
       break;
   }
+
+  // rightSpeed *= 0.5;
+
+  leftMotor.setSpeed(leftSpeed);
+  rightMotor.setSpeed(rightSpeed);
 }
 
 Direction getDirection(double ld, double rd, double fd) {
@@ -195,35 +182,31 @@ Direction getDirection(double ld, double rd, double fd) {
     return Stop;
   }
 
-  if (ld > fd) {
-    if (ld > rd) {
-      return Left;
-    } else {
-      return Right;
-    }
-  } else {
-    if (fd > rd) {
-      return Forward;
-    } else {
-      return Right;
-    }
+  if (ld < 6) {
+    return Right;
   }
+
+  if (rd < 6) {
+    return Left;
+  }
+
+  if (fd < 10) {
+    return ld > rd ? Left : Right;
+  }
+
+  return Forward;
 }
 
-void printDirection(Direction direction) {
-  switch(direction) {
+char* toString(Direction direction) {
+  switch (direction) {
     case Forward:
-      Serial.println("Direction: Forward");
-      break;
+      return "Forward";
     case Left:
-      Serial.println("Direction: Left");
-      break;
+      return "Left";
     case Right:
-      Serial.println("Direction: Right");
-      break;
+      return "Right";
     case Stop:
-      Serial.println("Direction: Stop");
-      break;
+      return "Stop";
   }
 }
 
@@ -233,13 +216,11 @@ void loop() {
   double leftDistance = leftSensor.getDistance();
   double rightDistance = rightSensor.getDistance();
   double frontDistance = frontSensor.getDistance();
-
-  Serial.printf("Left: %lf Front: %lf Right: %lf\n", leftDistance, frontDistance, rightDistance);
-
   Direction direction = getDirection(leftDistance, rightDistance, frontDistance);
-  printDirection(direction);
 
-  // navigate(direction);
+  //Serial.printf("Left: %.2lf Front: %.2lf Right: %.2lf Direction: %s\n", leftDistance, frontDistance, rightDistance, toString(direction));
 
-  delay(50);
+  navigate(direction);
+
+  //delay(50);
 }

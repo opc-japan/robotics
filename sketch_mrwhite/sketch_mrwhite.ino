@@ -1,12 +1,12 @@
-/*
-  1. Set sketchbook location to ~/opc-japan/robotics/sketch_mrwhite
-  2. Add this to Settings > Additional boards manager urls:
-    https://dl.espressif.com/dl/package_esp32_index.json
-  3. Install the following boards from boards manager:
-    esp32
-  4. Install the following libraries from library manager:
-    ESP32Servo
-*/
+// 1. Set sketchbook location to ~/opc-japan/robotics/sketch_mrwhite
+// 2. Add this to Settings > Additional boards manager urls:
+//   https://dl.espressif.com/dl/package_esp32_index.json
+// 3. Install the following boards from boards manager:
+//   esp32
+// 4. Install the following libraries from library manager:
+//   ESP32Servo
+// 5. If you get an error saying that python executable is found on path, run this command and restart Arduino IDE:
+//   sed -i -e 's/=python /=python3 /g' ~/Library/Arduino15/packages/esp32/hardware/esp32/*/platform.txt
 
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -182,16 +182,16 @@ Direction getDirection(double ld, double rd, double fd) {
     return Stop;
   }
 
-  if (ld < 6) {
+  if (fd < 10) {
+    return ld > rd ? Left : Right;
+  }
+
+  if (ld < 8) {
     return Right;
   }
 
-  if (rd < 6) {
+  if (rd < 8) {
     return Left;
-  }
-
-  if (fd < 10) {
-    return ld > rd ? Left : Right;
   }
 
   return Forward;
@@ -218,7 +218,7 @@ void loop() {
   double frontDistance = frontSensor.getDistance();
   Direction direction = getDirection(leftDistance, rightDistance, frontDistance);
 
-  //Serial.printf("Left: %.2lf Front: %.2lf Right: %.2lf Direction: %s\n", leftDistance, frontDistance, rightDistance, toString(direction));
+  // Serial.printf("Left: %.2lf Front: %.2lf Right: %.2lf Direction: %s\n", leftDistance, frontDistance, rightDistance, toString(direction));
 
   navigate(direction);
 

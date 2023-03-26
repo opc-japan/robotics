@@ -138,7 +138,7 @@ void initOTA() {
 }
 
 void setup() {
-  initOTA();
+  //initOTA();
 
   leftMotor.init();
   rightMotor.init();
@@ -211,16 +211,26 @@ char* toString(Direction direction) {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  //ArduinoOTA.handle();
 
   double leftDistance = leftSensor.getDistance();
   double rightDistance = rightSensor.getDistance();
   double frontDistance = frontSensor.getDistance();
   Direction direction = getDirection(leftDistance, rightDistance, frontDistance);
 
-  // Serial.printf("Left: %.2lf Front: %.2lf Right: %.2lf Direction: %s\n", leftDistance, frontDistance, rightDistance, toString(direction));
-
-  navigate(direction);
-
-  //delay(50);
+  if (frontDistance > 10) {
+    if (leftDistance < 10) {
+      navigate(Right);
+    } else if (rightDistance < 10) {
+      navigate(Left);
+    } else {
+      navigate(Forward);
+    }
+  } else {
+    if (rightDistance < leftDistance) {
+      navigate(Left);
+    } else {
+      navigate(Right);
+    }
+  }
 }
